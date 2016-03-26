@@ -1,0 +1,109 @@
+%symbol {
+  identifier : "ratings",
+  type: ndarray<2, float>,
+  init_file : "ratings_file"
+}
+
+%symbol {
+  identifier : "L",
+  type: ndarray<2, float>,
+  dim[0] : @symbol_table["ratings"].shape[0],
+  dim[1] : K
+}
+
+%symbol {
+  identifier : "R",
+  type: ndarray<2, float>,
+  dim[0] : @symbol_table["ratings"].shape[1],
+  dim[1] : K
+}
+
+%symbol {
+  identifier : "main",
+  type : function,
+  return_type : void,
+  argument_types : []
+}
+
+%function_definition {
+  %attributes {
+    identifier: "main"
+  }
+
+  %symbol {
+    identifier : "eta",
+    type : float,
+    init_value : 0.1
+  }
+
+  %symbol {
+    identifier : "lambda",
+    type : float,
+    init_value : 0.01
+  }
+
+  %symbol {
+    identifier : "K",
+    type : int8,
+    init_value : 100
+  }
+
+  %iterate_for {
+    %attributes {
+       num_iterations: 100
+    }
+    %foreach {
+      %attributes {
+        iteration_space: @symbol_table["ratings"]
+        iteration_element: @symbol_table["e"]
+      }
+      %symbol {
+        identifier : "pred",
+	type : float
+      }
+
+      %symbol {
+        identifier : "e",
+	type : float
+      }
+
+      %load t0 @symbol_table["e"]
+      %member_read t1 t0 "idx"
+      %array_read t2 t1 (1)
+      %load t3 @symbol_table["R"]
+      %ndarray_read t4 t3 t2
+      %call t5 t4 "transpose" ()
+      %array_read t6 t1 (0)
+      %load t7 @symbol_table["L"]
+      %ndarray_read t8 t7 t6
+      %call t9 t8 "dot_prod" (t4)
+      %store @symbol_table["pred"] t9
+
+      %member_read t10 e "val"
+      %subtract t11 t9 t10
+      %multiply t12 -2 t11
+      %store @symbol_table["gradc"] t12
+
+      %multiply t13 t12 t2
+      %load t13 @symbol_table["lambda"]
+      %multiply t14 t13 t6
+      %add t15 t12 t14
+      %store @symbol_table["L_grad"] t15
+
+      %multiply t16 t12 t6
+      %multiply t17 t13 t2
+      %add t18 t16 t17
+      %store @symbol_table["R_grad"] t18
+
+      %load t19 @symbol_table["eta"]
+      %multiply t20 t19 t15
+      %subtract t21 t8 t20
+      %ndarray_store @symbol_table["L"] t21 (t6)
+
+      %multiply t22 t19 t18
+      %subtract t23 t4 t22
+      %ndarray_store @symbol_table["R"] t23 (t2)
+    }
+  }
+
+}
