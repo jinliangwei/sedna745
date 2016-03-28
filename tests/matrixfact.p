@@ -2,6 +2,10 @@ ndarray<2, float> ratings = {"ratings_file"};
 ndarray<2, float> L = {ratings.shape[0], K};
 ndarray<2, float> R = {ratings.shape[1], K};
 
+float eta = 0.1;
+float lambda = 0.01;
+int8 K = 100;
+
 def
 float eval_rmse() {
   float error = 0;
@@ -21,10 +25,6 @@ float eval_rmse() {
 
 def
 void main() {
-  float eta = 0.1;
-  float lambda = 0.01;
-  int8 K = 100;
-
   iterate_for (100) {
     foreach (auto e : ratings) {
       float pred = L[e.idx[0]].dot_prod(R[e.idx[1]].transpose());
