@@ -5,6 +5,7 @@
 
 int yylex (void);
 void yyerror (char const *);
+Program *program;
 %}
 
 %union {
@@ -12,8 +13,13 @@ void yyerror (char const *);
   Int *int_val;
   Float *float_val;
   PrimitiveType *primitive_type;
+  Program *program;
+  Function *function;
   Type *type;
+  ConstantVar *constant_var;
   Value *value;
+  Symbol *symbol;
+  BlockScope *block_scope;
   NdArrayType *ndarray_type;
   NdArrayDomainType *ndarray_domain_type;
   ScalarArrayType *scalar_array_type;
@@ -26,6 +32,12 @@ void yyerror (char const *);
   Attributes *attributes;
   StatementHeader *statement_header;
   ArrayValue *array_value;
+  ConstantVarList *constant_var_list;
+  Statement *statement;
+  Argument *argument;
+  Arguments *arguments;
+  ArgumentList *argument_list;
+  CompoundStatement *compound_statement;
 }
 
 %token SYMBOL FUNCTION ATTRIBUTES
@@ -49,18 +61,28 @@ void yyerror (char const *);
 %type <key_value_list> key_value_list;
 %type <attributes> attributes;
 %type <statement_header> statement_header;
-
+%type <symbol> symbol;
+%type <program> program;
+%type <function> function;
+%type <block_scope> block_scope;
+%type <constant_var> constant_var;
+%type <constant_var_list> constant_var_list;
+%type <statement> statement;
+%type <argument> argument;
+%type <arguments> arguments;
+%type <argument_list> argument_list;
+%type <compound_statement> compound_statement;
 %start program
 
 %%
 program:
-%empty
-| symbol program
-| function program
+%empty { $$ = new Program(); program = $$; }
+| symbol program { $$ = $2; $$->list_.push_front($1); }
+| function program { $$ = $2; $$->list_.push_front($1); }
 ;
 
 symbol:
-SYMBOL '{' key_value_list '}' 
+SYMBOL '{' key_value_list '}' { $$ = new Symbol($3); }
 ;
 
 value:
@@ -78,8 +100,8 @@ array_value:
 ;
 
 value_list:
-value { $$ = new ValueList(); $$->list_.push_back($1); }
-| value ',' value_list { $$->list_.push_back($1); }
+value { $$ = new ValueList(); $$->list_.push_front($1); }
+| value ',' value_list { $$ = $3; $$->list_.push_front($1); }
 ;
 
 key_value:
@@ -87,8 +109,8 @@ IDENTIFIER ':' value { $$ = new KeyValue($1, $3); }
 ;
 
 key_value_list:
-key_value { $$ = new KeyValueList(); $$->push_back($1); }
-| key_value ',' key_value_list { $$->push_back($1); }
+key_value { $$ = new KeyValueList(); $$->list_.push_front($1); }
+| key_value ',' key_value_list { $$ = $3; $$->list_.push_front($1); }
 ;
 
 primitive_type:
@@ -134,18 +156,18 @@ SYMBOL_TABLE '[' STRING_LITERAL ']' { $$ = new PrimarySymbolTableReference($3); 
 ;
 
 symbol_table_reference:
-primary_symbol_table_reference { $$ = new SymbolTableReference(); $$->list_.push_back($1); }
-| symbol_table_reference '[' int_list ']' { $$->list_.push_back($3); }
-| symbol_table_reference '.' IDENTIFIER { $$->list_.push_back($3); }
+primary_symbol_table_reference { $$ = new SymbolTableReference(); $$->list_.push_front($1); }
+| symbol_table_reference '[' int_list ']' { $$ = $1; $$->list_.push_back($3); }
+| symbol_table_reference '.' IDENTIFIER { $$ = $1; $$->list_.push_back($3); }
 ;
 
 int_list:
-INT_CONSTANT { $$ = new IntList(); $$->push_back($1); }
-| INT_CONSTANT int_list {$$->push_back($1); }
+INT_CONSTANT { $$ = new IntList(); $$->push_front($1); }
+| INT_CONSTANT int_list {$$->push_front($1); }
 ;
 
 function:
-FUNCTION '{' attributes block_scope '}'
+FUNCTION '{' attributes block_scope '}' { $$ = new Function($3, $4); }
 ;
 
 attributes:
@@ -153,14 +175,14 @@ ATTRIBUTES '{' key_value_list '}' { $$ = new Attributes($3); }
 ;
 
 block_scope:
-%empty
-| symbol block_scope
-| statement block_scope
+%empty { $$ = new BlockScope(); }
+| symbol block_scope { $$ = $2; $$->list_.push_front($1); }
+| statement block_scope { $$ = $2; $$->list_.push_front($1); }
 ;
 
 statement:
-statement_header constant_var_list arguments
-| compound_statement
+statement_header constant_var_list arguments { $$ = new SingleStatement($1, $2, $3); }
+| compound_statement { $$ = $1; }
 ;
 
 statement_header:
@@ -168,37 +190,37 @@ statement_header:
 ;
 
 arguments:
-%empty
-| argument arguments
+%empty { $$ = new Arguments(); }
+| argument arguments { $$ = $2; $$->list_.push_front($1); }
 ;
 
 argument:
-'(' argument_list ')'
+'(' argument_list ')' { $$ = new Argument($2); }
 ;
 
 argument_list:
-%empty
-| constant_var
-| argument
-| constant_var ',' argument_list
-| argument ',' argument_list
+%empty { $$ = new ArgumentList(); }
+| constant_var { $$->list_.push_front($1); }
+| argument { $$->list_.push_front($1); }
+| constant_var ',' argument_list { $$->list_.push_front($1); }
+| argument ',' argument_list { $$->list_.push_front($1); }
 ;
 
 constant_var:
-IDENTIFIER
-| primary_symbol_table_reference
-| INT_CONSTANT
-| FLOAT_CONSTANT
-| STRING_LITERAL
+IDENTIFIER { $$ = new ConstantVar($1); }
+| primary_symbol_table_reference { $$ = new ConstantVar($1); }
+| INT_CONSTANT { $$ = new ConstantVar($1); }
+| FLOAT_CONSTANT { $$ = new ConstantVar($1); }
+| STRING_LITERAL { $$ = new ConstantVar($1); }
 ;
 
 constant_var_list:
-constant_var
-| constant_var constant_var_list
+constant_var { $$ = new ConstantVarList(); $$->list_.push_front($1); }
+| constant_var constant_var_list { $$->list_.push_front($1); }
 ;
 
 compound_statement:
-statement_header '{' attributes block_scope '}'
+statement_header '{' attributes block_scope '}' { $$ = new CompoundStatement($1, $3, $4); }
 ;
 
 %%
