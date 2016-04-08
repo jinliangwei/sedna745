@@ -200,10 +200,10 @@ argument:
 
 argument_list:
 %empty { $$ = new ArgumentList(); }
-| constant_var { $$->list_.push_front($1); }
-| argument { $$->list_.push_front($1); }
-| constant_var ',' argument_list { $$->list_.push_front($1); }
-| argument ',' argument_list { $$->list_.push_front($1); }
+| constant_var { $$ = new ArgumentList(); $$->list_.push_front($1); }
+| argument { $$ = new ArgumentList(); $$->list_.push_front($1); }
+| constant_var ',' argument_list { $$ = $3; $$->list_.push_front($1); }
+| argument ',' argument_list { $$ = $3; $$->list_.push_front($1); }
 ;
 
 constant_var:
@@ -216,7 +216,7 @@ IDENTIFIER { $$ = new ConstantVar($1); }
 
 constant_var_list:
 constant_var { $$ = new ConstantVarList(); $$->list_.push_front($1); }
-| constant_var constant_var_list { $$->list_.push_front($1); }
+| constant_var constant_var_list { $$ = $2; $$->list_.push_front($1); }
 ;
 
 compound_statement:

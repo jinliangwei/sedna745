@@ -45,7 +45,7 @@ IS	(u|U|l|L)*
 ("+"|"-")?{D}+{E}{FS}?		 { yylval.int_val = new Int(atoi(yytext)); return INT_CONSTANT; }
 ("+"|"-")?{D}*"."{D}+({E})?{FS}? { yylval.float_val = new Float(atof(yytext)); return FLOAT_CONSTANT; }
 ("+"|"-")?{D}+"."{D}*({E})?{FS}? { yylval.float_val = new Float(atof(yytext)); return FLOAT_CONSTANT; }
-L?'(\\.|[^\\'])+'	 { return INT_CONSTANT; }
+L?'(\\.|[^\\'])+'	 { yylval.int_val = new Int(atoi(yytext)); return INT_CONSTANT; }
 L?\"(\\.|[^\\"])*\"	 { yylval.str_val = new String(yytext); return STRING_LITERAL; }
 
 "{"			 { return '{'; }

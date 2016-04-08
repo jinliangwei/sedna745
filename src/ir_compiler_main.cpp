@@ -7,7 +7,7 @@ int main (int argc, char *argv[])
   extern Program *program;
   
   int rc = yyparse ();
-  program->Print();
+  std::cout << program->ToString() << std::endl;
 
   return rc;
 }
