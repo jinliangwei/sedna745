@@ -28,7 +28,8 @@ $(BISON_IR_OUTPUT): % : src/bison run_bison_ir
 bin/pi_compiler: bin bison_ir_output
 	$(CXX) $(CFLAGS) -Wno-unused-function \
 	src/bison/pi.tab.cc src/bison/lex.pi.c \
-	src/ir_compiler_main.cpp -o $@
+	src/ir_compiler_main.cpp src/bison/symbol_table.cc \
+	src/bison/step_two_visitor.cc -o $@
 
 clean:
 	rm -rf bin src/bison

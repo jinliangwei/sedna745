@@ -9,9 +9,9 @@ Program *program;
 %}
 
 %union {
-  String *str_val;
-  Int *int_val;
-  Float *float_val;
+  String *str_value;
+  Int *int_value;
+  Float *float_value;
   PrimitiveType *primitive_type;
   Program *program;
   Function *function;
@@ -42,9 +42,9 @@ Program *program;
 
 %token SYMBOL FUNCTION ATTRIBUTES
 %token NDARRAY SYMBOL_TABLE TEMP_VAR STATEMENT
-%token <float_val> FLOAT_CONSTANT
-%token <int_val> INT_CONSTANT
-%token <str_val> STRING_LITERAL IDENTIFIER CHAR BOOLEAN STRING INT8 INT16 INT32 INT64 UINT8 UINT16 UINT32 UINT64 FLOAT DOUBLE DOMAIN_OP
+%token <float_value> FLOAT_CONSTANT
+%token <int_value> INT_CONSTANT
+%token <str_value> STRING_LITERAL IDENTIFIER CHAR BOOLEAN STRING INT8 INT16 INT32 INT64 UINT8 UINT16 UINT32 UINT64 FLOAT DOUBLE DOMAIN_OP
 
 %type <primitive_type> primitive_type
 %type <type> type;

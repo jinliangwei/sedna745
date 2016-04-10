@@ -7,20 +7,25 @@
 #include <cassert>
 #include <algorithm>
 
+#include "visitor.h"
+
 struct Node {
   virtual std::string ToString() = 0;
+  virtual void Accept(Visitor *v) = 0;
   virtual ~Node() {};
 };
 
 struct Value : public Node {
   virtual std::string ToString() = 0;
+  virtual void Accept(Visitor *v) = 0;
 };
 
 struct Int : public Value {
   Int(int value) : value_(value) {}
 
   std::string ToString() { return std::to_string(value_); }
-  
+  void Accept(Visitor *v) { v->Visit(this); }
+
   int value_;
 };
   
@@ -28,6 +33,7 @@ struct Float : public Value {
   Float(float value) : value_(value) {}
 
   std::string ToString() { return std::to_string(value_); }
+  void Accept(Visitor *v) { v->Visit(this); }
 
   float value_;
 };
@@ -36,12 +42,15 @@ struct String : public Value {
   String(std::string value) : value_(value) {}
 
   std::string ToString() { return value_; }
+  void Accept(Visitor *v) { v->Visit(this); }
 
   std::string value_;
 };
 
 struct NodeList : public Node {
   std::string ToString() { return ""; }
+
+  void Accept(Visitor *v) {}
 
   void push_front(Node* node) {
     list_.push_front(node);
@@ -53,7 +62,7 @@ struct NodeList : public Node {
   std::list<Node*> list_;
 };
   
-struct IntList : public NodeList {
+struct IntList : public Node {
   std::string ToString() {
     std::string r;
 
@@ -66,6 +75,14 @@ struct IntList : public NodeList {
 
     return r;
   }
+
+  void Accept(Visitor *v) { v->Visit(this); }
+
+  void push_front(Int* int_value) {
+    list_.push_front(int_value);
+  }
+
+  std::list<Int*> list_;
 };
   
 struct Type : public Node {};
@@ -76,6 +93,8 @@ struct PrimitiveType : public Type {
   std::string ToString() {
     return type_->ToString();
   }
+
+  void Accept(Visitor *v) { v->Visit(this); }
 
   String* type_;
 };
@@ -95,6 +114,8 @@ struct NdArrayType : public Type {
     return r;
   }
 
+  void Accept(Visitor *v) { v->Visit(this); }
+
   Int* dimension_;
   Type* type_;
 };
@@ -108,6 +129,8 @@ struct NdArrayDomainType : public Type {
         identifier_(identifier) {}
 
   std::string ToString() { return ""; }
+
+  void Accept(Visitor *v) { v->Visit(this); }
 
   Type* ndarray_type_;
   String* domain_op_;
@@ -134,6 +157,8 @@ struct ScalarArrayType : public Value {
     return r;
   }
 
+  void Accept(Visitor *v) { v->Visit(this); }
+
   Type* type_;
   Int* dimension_;
 };
@@ -147,6 +172,8 @@ struct PrimarySymbolTableReference : public Node {
     r += "]";
     return r;
   }
+
+  void Accept(Visitor *v) { v->Visit(this); }
 
   String* symbol_;
 };
@@ -169,6 +196,8 @@ struct SymbolTableReference : public Value {
     return r;
   }
 
+  void Accept(Visitor *v) { v->Visit(this); }
+
   NodeList list_;
 };
 
@@ -179,6 +208,8 @@ struct ValueList : public Value {
       r += i->ToString();
     return r;
   }
+
+  void Accept(Visitor *v) { v->Visit(this); }
 
   NodeList list_;
 };
@@ -194,6 +225,8 @@ struct ArrayValue : public Value {
     return r;
   }
 
+  void Accept(Visitor *v) { v->Visit(this); }
+
   ValueList* value_list_;
 };
   
@@ -207,11 +240,13 @@ struct KeyValue : public Node {
     return r;
   }
 
+  void Accept(Visitor *v) { v->Visit(this); }
+
   String* key_;
   Value* value_;
 };
 
-struct KeyValueList : public NodeList {
+struct KeyValueList : public Node {
   std::string ToString() {
     std::string r;
     int i = list_.size();
@@ -223,6 +258,10 @@ struct KeyValueList : public NodeList {
     }
     return r;
   }
+
+  void Accept(Visitor *v) { v->Visit(this); }
+
+  std::list<KeyValue*> list_;
 };
 
 struct Attributes : public Node {
@@ -234,6 +273,8 @@ struct Attributes : public Node {
     r += "}";
     return r;
   }
+
+  void Accept(Visitor *v) { v->Visit(this); }
 
   KeyValueList* key_value_list_;
 };
@@ -247,6 +288,8 @@ struct StatementHeader : public Node {
     return r;
   }
   
+  void Accept(Visitor *v) { v->Visit(this); }
+
   String* header_;
 };
   
@@ -260,18 +303,24 @@ struct Symbol : public Node {
     return r;
   }
 
+  void Accept(Visitor *v) { v->Visit(this); }
+
   KeyValueList* key_value_list_;
 };
 
 struct Program : public NodeList {
   std::string ToString() {
     std::string r;
-    for (auto i : list_) {
-      r += i->ToString();
-      r += "\n\n";
+    int i = list_.size();
+    for (auto j : list_) {
+      r += j->ToString();
+      if (--i)
+        r += "\n";
     }
     return r;
   }
+
+  void Accept(Visitor *v) { v->Visit(this); }
 };
 
 struct BlockScope : public NodeList {
@@ -283,6 +332,8 @@ struct BlockScope : public NodeList {
     }
     return r;
   }
+
+  void Accept(Visitor *v) { v->Visit(this); }
 };
 
 struct Function : public Node {
@@ -292,11 +343,13 @@ struct Function : public Node {
   std::string ToString() {
     std::string r = "%function {\n";
     r += attributes_->ToString();
-    r += "\n\n";
+    r += "\n";
     r += block_scope_->ToString();
-    r += "}\n";
+    r += "}";
     return r;
   }
+
+  void Accept(Visitor *v) { v->Visit(this); }
 
   Attributes* attributes_;
   BlockScope* block_scope_;
@@ -308,6 +361,8 @@ struct ConstantVar : public Node {
   std::string ToString() {
     return node_->ToString();
   }
+
+  void Accept(Visitor *v) { v->Visit(this); }
 
   Node* node_;
 };
@@ -323,6 +378,8 @@ struct ConstantVarList : public NodeList {
     }
     return r;
   }
+
+  void Accept(Visitor *v) { v->Visit(this); }
 };
 
 struct Statement : public Node {};
@@ -341,9 +398,11 @@ struct CompoundStatement : public Statement {
     r += attributes_->ToString();
     r += "\n";
     r += block_scope_->ToString();
-    r += "}\n";
+    r += "}";
     return r;
   }
+
+  void Accept(Visitor *v) { v->Visit(this); }
 
   StatementHeader* statement_header_;
   Attributes* attributes_;
@@ -361,6 +420,8 @@ struct ArgumentList : public NodeList {
     }
     return r;
   }
+
+  void Accept(Visitor *v) { v->Visit(this); }
 };
 
 struct Arguments : public NodeList {
@@ -370,6 +431,8 @@ struct Arguments : public NodeList {
       r += i->ToString();
     return r;
   }
+
+  void Accept(Visitor *v) { v->Visit(this); }
 };
 
 struct Argument : public Node {
@@ -381,6 +444,8 @@ struct Argument : public Node {
     r += ")";
     return r;
   }
+
+  void Accept(Visitor *v) { v->Visit(this); }
 
   ArgumentList* argument_list_;
 };
@@ -402,9 +467,13 @@ struct SingleStatement : public Statement {
     return r;
   }
 
+  void Accept(Visitor *v) { v->Visit(this); }
+
   StatementHeader* statement_header_;
   ConstantVarList* constant_var_list_;
   Arguments* arguments_;
 };
+
+using StatementList = std::vector<Statement*>;
 
 #endif
