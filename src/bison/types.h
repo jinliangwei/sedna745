@@ -450,20 +450,52 @@ struct Argument : public Node {
   ArgumentList* argument_list_;
 };
 
+struct ArrayAccess : public Node {
+  ArrayAccess(Node* constant_var,
+              Arguments* arguments)
+      : constant_var_(constant_var),
+        arguments_(arguments) {}
+
+  std::string ToString() {
+    std::string r = constant_var_->ToString();
+    r += " ";
+    r += arguments_->ToString();
+    return r;
+  }
+
+  void Accept(Visitor *v) { v->Visit(this); }
+
+  Node* constant_var_;
+  Arguments* arguments_;
+};
+
 struct SingleStatement : public Statement {
   SingleStatement(StatementHeader* statement_header,
                   ConstantVarList* constant_var_list,
                   Arguments* arguments)
       : statement_header_(statement_header),
         constant_var_list_(constant_var_list),
-        arguments_(arguments) {}
+        arguments_(arguments),
+        array_access_(nullptr) {
+
+    std::string stmt = statement_header_->ToString();
+
+    if (stmt == "array_read" ||
+        stmt == "ndarray_read" ||
+        stmt == "ndarray_store" ||
+        stmt == "member_read") {
+      array_access_ = new ArrayAccess(constant_var_list->list_.back(), arguments);
+      constant_var_list_->list_.pop_back();
+      arguments_ = nullptr;
+    }
+  }
 
   std::string ToString() {
     std::string r = statement_header_->ToString();
     r += " ";
     r += constant_var_list_->ToString();
     r += " ";
-    r += arguments_->ToString();
+    r += array_access_ ? array_access_->ToString() : arguments_->ToString();
     return r;
   }
 
@@ -472,6 +504,9 @@ struct SingleStatement : public Statement {
   StatementHeader* statement_header_;
   ConstantVarList* constant_var_list_;
   Arguments* arguments_;
+
+  // This is only valid if statement is one of cases listed in the constructor.
+  ArrayAccess* array_access_;
 };
 
 using StatementList = std::vector<Statement*>;
