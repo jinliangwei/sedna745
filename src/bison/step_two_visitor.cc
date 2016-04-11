@@ -21,13 +21,23 @@ void StepTwoVisitor::Visit(Function* function) {
 }
 
 void StepTwoVisitor::Visit(CompoundStatement* compound_statement) {
-  compound_statement->block_scope_->Accept(this);
+  BlockScope* bs = compound_statement->block_scope_;
+  bs->Accept(this);
+
+  for (auto& i : bs->list_) {
+    if (auto* stmt = dynamic_cast<Statement*>(i)) {
+      compound_statement->read_set_.insert(stmt->read_set_.begin(),
+                                           stmt->read_set_.end());
+      compound_statement->write_set_.insert(stmt->write_set_.begin(),
+                                            stmt->write_set_.end());
+    }
+  }
 }
 
 // If node is a @symbol_table reference, then return the Symbol object it points
 // to, otherwise return the node itself.
 Node* StepTwoVisitor::Lookup(Node* node) {
-  if (auto *symbol_ref = dynamic_cast<PrimarySymbolTableReference*>(node)) {
+  if (auto* symbol_ref = dynamic_cast<PrimarySymbolTableReference*>(node)) {
     Node* node = symbol_table_.Lookup(symbol_ref->symbol_->ToString());
     assert(node);  // Lookup should succeed, or it is an undefined symbol.
     return node;

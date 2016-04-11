@@ -385,7 +385,11 @@ struct ConstantVarList : public NodeList {
   void Accept(Visitor *v) { v->Visit(this); }
 };
 
-struct Statement : public Node {};
+struct Statement : public Node {
+  // These start as empty, and are populated after StepTwoVisitor pass.
+  NodeSet read_set_;
+  NodeSet write_set_;
+};
 
 struct CompoundStatement : public Statement {
   CompoundStatement(StatementHeader* statement_header,
@@ -410,10 +414,6 @@ struct CompoundStatement : public Statement {
   StatementHeader* statement_header_;
   Attributes* attributes_;
   BlockScope* block_scope_;
-
-  // These start as empty, and are populated after StepTwoVisitor pass.
-  NodeSet read_set_;
-  NodeSet write_set_;
 };
 
 struct ArgumentList : public NodeList {
@@ -517,10 +517,6 @@ struct SingleStatement : public Statement {
   // array_access_ is not nullptr and arguments_ is nullptr.  Otherwise,
   // array_access_ is nullptr, and arguments_ may or may not be nullptr.
   ArrayAccess* array_access_;
-
-  // These start as empty, and are populated after StepTwoVisitor pass.
-  NodeSet read_set_;
-  NodeSet write_set_;
 };
 
 #endif
