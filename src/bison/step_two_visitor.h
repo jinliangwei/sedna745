@@ -6,7 +6,6 @@
 
 class StepTwoVisitor : public Visitor {
  public:
-  StepTwoVisitor(StatementList* statements) : statements_(statements) {}
   void Visit(Int* int_value) {}
   void Visit(Value* value) {}
   void Visit(Float* float_value) {}
@@ -34,11 +33,12 @@ class StepTwoVisitor : public Visitor {
   void Visit(ArgumentList* argument_list) {}
   void Visit(Arguments* arguments) {}
   void Visit(Argument* argument) {}
-  void Visit(SingleStatement* single_statement) {}
+  void Visit(SingleStatement* single_statement);
   void Visit(ArrayAccess* array_access) {}
 
  private:
-  StatementList* statements_;
+  Node* Lookup(Node* node);
+
   SymbolTable symbol_table_;
 };
 

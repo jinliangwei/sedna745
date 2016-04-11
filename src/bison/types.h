@@ -6,6 +6,7 @@
 #include <iostream>
 #include <cassert>
 #include <algorithm>
+#include <set>
 
 #include "visitor.h"
 
@@ -14,6 +15,8 @@ struct Node {
   virtual void Accept(Visitor *v) = 0;
   virtual ~Node() {};
 };
+
+using NodeSet = std::set<Node*>;
 
 struct Value : public Node {
   virtual std::string ToString() = 0;
@@ -28,7 +31,7 @@ struct Int : public Value {
 
   int value_;
 };
-  
+
 struct Float : public Value {
   Float(float value) : value_(value) {}
 
@@ -37,7 +40,7 @@ struct Float : public Value {
 
   float value_;
 };
-  
+
 struct String : public Value {
   String(std::string value) : value_(value) {}
 
@@ -61,7 +64,7 @@ struct NodeList : public Node {
 
   std::list<Node*> list_;
 };
-  
+
 struct IntList : public Node {
   std::string ToString() {
     std::string r;
@@ -84,7 +87,7 @@ struct IntList : public Node {
 
   std::list<Int*> list_;
 };
-  
+
 struct Type : public Node {};
 
 struct PrimitiveType : public Type {
@@ -177,7 +180,7 @@ struct PrimarySymbolTableReference : public Node {
 
   String* symbol_;
 };
-      
+
 struct SymbolTableReference : public Value {
   std::string ToString() {
     std::string r;
@@ -229,7 +232,7 @@ struct ArrayValue : public Value {
 
   ValueList* value_list_;
 };
-  
+
 struct KeyValue : public Node {
   KeyValue(String* key, Value* value) : key_(key), value_(value) {}
 
@@ -287,12 +290,12 @@ struct StatementHeader : public Node {
     r += header_->ToString();
     return r;
   }
-  
+
   void Accept(Visitor *v) { v->Visit(this); }
 
   String* header_;
 };
-  
+
 struct Symbol : public Node {
   Symbol(KeyValueList* key_value_list) : key_value_list_(key_value_list) {}
 
@@ -407,6 +410,10 @@ struct CompoundStatement : public Statement {
   StatementHeader* statement_header_;
   Attributes* attributes_;
   BlockScope* block_scope_;
+
+  // These start as empty, and are populated after StepTwoVisitor pass.
+  NodeSet read_set_;
+  NodeSet write_set_;
 };
 
 struct ArgumentList : public NodeList {
@@ -484,7 +491,8 @@ struct SingleStatement : public Statement {
         stmt == "ndarray_read" ||
         stmt == "ndarray_store" ||
         stmt == "member_read") {
-      array_access_ = new ArrayAccess(constant_var_list->list_.back(), arguments);
+      array_access_ = new ArrayAccess(constant_var_list->list_.back(),
+                                      arguments);
       constant_var_list_->list_.pop_back();
       arguments_ = nullptr;
     }
@@ -505,10 +513,14 @@ struct SingleStatement : public Statement {
   ConstantVarList* constant_var_list_;
   Arguments* arguments_;
 
-  // This is only valid if statement is one of cases listed in the constructor.
+  // If this statement is one of the cases listed in the constructor, then
+  // array_access_ is not nullptr and arguments_ is nullptr.  Otherwise,
+  // array_access_ is nullptr, and arguments_ may or may not be nullptr.
   ArrayAccess* array_access_;
-};
 
-using StatementList = std::vector<Statement*>;
+  // These start as empty, and are populated after StepTwoVisitor pass.
+  NodeSet read_set_;
+  NodeSet write_set_;
+};
 
 #endif

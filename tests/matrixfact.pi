@@ -65,6 +65,21 @@
 	type : float
       }
 
+      %symbol {
+        identifier : "gradc",
+	type : float
+      }
+
+      %symbol {
+        identifier : "L_grad",
+	type : float
+      }
+
+      %symbol {
+        identifier : "R_grad",
+	type : float
+      }
+
       @load t0 @symbol_table["e"]
       @member_read t1 t0 (idx)
       @array_read t2 t1 (1)

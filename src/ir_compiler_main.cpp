@@ -5,14 +5,15 @@ extern int yyparse();
 
 int main (int argc, char *argv[])
 {
-  StatementList statements;
-  StepTwoVisitor step_two_visitor(&statements);
+  StepTwoVisitor step_two_visitor;
   extern Program *program;
 
   int rc = yyparse ();
   std::cout << program->ToString() << std::endl;
 
   program->Accept(&step_two_visitor);
+
+  std::cout << program->ToString() << std::endl;
 
   return rc;
 }
