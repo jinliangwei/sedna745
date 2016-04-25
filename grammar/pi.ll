@@ -1,6 +1,6 @@
 %{
 #include <string>
-#include "types.h"
+#include "../types.h"
 
 #include "pi.tab.hh"
 %}
@@ -37,7 +37,7 @@ IS	(u|U|l|L)*
 "double"	{ yylval.str_value = new String(yytext); return DOUBLE; }
 "ndarray"	{ yylval.str_value = new String(yytext); return NDARRAY; }
 
-{L}({L}|{D})* 		{ yylval.str_value = new String(yytext); return IDENTIFIER; }
+{L}({L}|{D})* 		{ yylval.id_value = new Identifier(yytext); return IDENTIFIER; }
 
 ("+"|"-")?0[xX]{H}+{IS}?  	 { yylval.int_value = new Int(atoi(yytext)); return INT_CONSTANT; }
 ("+"|"-")?0{D}+{IS}?		 { yylval.int_value = new Int(atoi(yytext)); return INT_CONSTANT; }

@@ -50,6 +50,15 @@ struct String : public Value {
   std::string value_;
 };
 
+struct Identifier : public Value {
+  Identifier(std::string value) : value_(value) {}
+
+  std::string ToString() { return value_; }
+  void Accept(Visitor *v) { v->Visit(this); }
+
+  std::string value_;
+};
+
 struct NodeList : public Node {
   std::string ToString() { return ""; }
 
@@ -91,7 +100,7 @@ struct IntList : public Node {
 struct Type : public Node {};
 
 struct PrimitiveType : public Type {
-  PrimitiveType(String* type) : type_(type) {}
+  PrimitiveType(Value* type) : type_(type) {}
 
   std::string ToString() {
     return type_->ToString();
@@ -99,7 +108,7 @@ struct PrimitiveType : public Type {
 
   void Accept(Visitor *v) { v->Visit(this); }
 
-  String* type_;
+  Value* type_;
 };
 
 struct NdArrayType : public Type {
@@ -126,7 +135,7 @@ struct NdArrayType : public Type {
 struct NdArrayDomainType : public Type {
   NdArrayDomainType(Type* ndarray_type,
                     String* domain_op,
-                    String* identifier)
+                    Identifier* identifier)
       : ndarray_type_(ndarray_type),
         domain_op_(domain_op),
         identifier_(identifier) {}
@@ -137,7 +146,7 @@ struct NdArrayDomainType : public Type {
 
   Type* ndarray_type_;
   String* domain_op_;
-  String* identifier_;
+  Identifier* identifier_;
 };
 
 struct ScalarArrayType : public Value {
@@ -234,7 +243,7 @@ struct ArrayValue : public Value {
 };
 
 struct KeyValue : public Node {
-  KeyValue(String* key, Value* value) : key_(key), value_(value) {}
+  KeyValue(Identifier* key, Value* value) : key_(key), value_(value) {}
 
   std::string ToString() {
     std::string r = key_->ToString();
@@ -245,7 +254,7 @@ struct KeyValue : public Node {
 
   void Accept(Visitor *v) { v->Visit(this); }
 
-  String* key_;
+  Identifier* key_;
   Value* value_;
 };
 
@@ -283,7 +292,7 @@ struct Attributes : public Node {
 };
 
 struct StatementHeader : public Node {
-  StatementHeader(String* header) : header_(header) {}
+  StatementHeader(Identifier* header) : header_(header) {}
 
   std::string ToString() {
     std::string r = "@";
@@ -293,7 +302,7 @@ struct StatementHeader : public Node {
 
   void Accept(Visitor *v) { v->Visit(this); }
 
-  String* header_;
+  Identifier* header_;
 };
 
 struct Symbol : public Node {

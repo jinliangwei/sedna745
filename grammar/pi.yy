@@ -1,7 +1,7 @@
 %{
 #include <iostream>
 #include <string>
-#include "types.h"
+#include "../types.h"
 
 int yylex (void);
 void yyerror (char const *);
@@ -9,6 +9,7 @@ Program *program;
 %}
 
 %union {
+  Identifier *id_value;
   String *str_value;
   Int *int_value;
   Float *float_value;
@@ -44,7 +45,8 @@ Program *program;
 %token NDARRAY SYMBOL_TABLE TEMP_VAR STATEMENT
 %token <float_value> FLOAT_CONSTANT
 %token <int_value> INT_CONSTANT
-%token <str_value> STRING_LITERAL IDENTIFIER CHAR BOOLEAN STRING INT8 INT16 INT32 INT64 UINT8 UINT16 UINT32 UINT64 FLOAT DOUBLE DOMAIN_OP
+%token <str_value> STRING_LITERAL CHAR BOOLEAN STRING INT8 INT16 INT32 INT64 UINT8 UINT16 UINT32 UINT64 FLOAT DOUBLE DOMAIN_OP
+%token <id_value> IDENTIFIER
 
 %type <primitive_type> primitive_type
 %type <type> type;

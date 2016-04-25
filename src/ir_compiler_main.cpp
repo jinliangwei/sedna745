@@ -1,5 +1,6 @@
-#include "bison/types.h"
-#include "bison/step_two_visitor.h"
+#include "types.h"
+#include "step_two_visitor.h"
+#include "dependence_analysis.hpp"
 
 extern int yyparse();
 
@@ -9,11 +10,17 @@ int main (int argc, char *argv[])
   extern Program *program;
 
   int rc = yyparse ();
-  std::cout << program->ToString() << std::endl;
+  //std::cout << program->ToString() << std::endl;
 
   program->Accept(&step_two_visitor);
 
-  std::cout << program->ToString() << std::endl;
+  //std::cout << program->ToString() << std::endl;
 
+  DependenceAnalysis dependence_analysis(program);
+  bool has_foreach_loop = dependence_analysis.Initialize();
+  if (has_foreach_loop) {
+    DependenceGraph dg = dependence_analysis.ComputeDependenceGraph();
+    std::cout << dg.ToString() << std::endl;
+  }
   return rc;
 }
