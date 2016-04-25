@@ -111,8 +111,8 @@ IDENTIFIER ':' value { $$ = new KeyValue($1, $3); }
 ;
 
 key_value_list:
-key_value { $$ = new KeyValueList(); $$->list_.push_front($1); }
-| key_value ',' key_value_list { $$ = $3; $$->list_.push_front($1); }
+key_value { $$ = new KeyValueList(); $$->Insert($1); }
+| key_value ',' key_value_list { $$ = $3; $$->Insert($1); }
 ;
 
 primitive_type:

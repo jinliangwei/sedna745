@@ -7,9 +7,9 @@ void SymbolTable::AddScope() {
 void SymbolTable::AddSymbol(Symbol *symbol) {
   std::string symbol_name;
 
-  for (auto kv : symbol->key_value_list_->list_)
-    if (kv->key_->ToString() == "identifier")
-      symbol_name = kv->value_->ToString();
+  for (const auto& kv : symbol->key_value_list_->map_)
+    if (kv.first->ToString() == "identifier")
+      symbol_name = kv.second->ToString();
 
   // There must be an "identifier" within %symbol definition.
   assert(symbol_name != "");

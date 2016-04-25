@@ -3,6 +3,7 @@
 
 #include <string>
 #include <list>
+#include <map>
 #include <iostream>
 #include <cassert>
 #include <algorithm>
@@ -261,9 +262,9 @@ struct KeyValue : public Node {
 struct KeyValueList : public Node {
   std::string ToString() {
     std::string r;
-    int i = list_.size();
-    for (auto j : list_) {
-      r += j->ToString();
+    int i = map_.size();
+    for (const auto& kv : map_) {
+      r += KeyValue(kv.first, kv.second).ToString();
       if (--i)
         r += ",";
       r += "\n";
@@ -271,9 +272,20 @@ struct KeyValueList : public Node {
     return r;
   }
 
+  void Insert(KeyValue *kv) {
+    assert(map_.find(kv->key_) == map_.end());
+    map_[kv->key_] = kv->value_;
+    delete kv;
+  }
+
+  Value *Lookup(Identifier *key) {
+    auto it = map_.find(key);
+    return it == map_.end() ? 0 : it->second;
+  }
+
   void Accept(Visitor *v) { v->Visit(this); }
 
-  std::list<KeyValue*> list_;
+  std::map<Identifier*, Value*> map_;
 };
 
 struct Attributes : public Node {
