@@ -498,11 +498,15 @@ struct SingleStatement : public Statement {
 
     if (stmt == "array_read" ||
         stmt == "ndarray_read" ||
-        stmt == "ndarray_store" ||
         stmt == "member_read") {
       array_access_ = new ArrayAccess(constant_var_list->list_.back(),
                                       arguments);
       constant_var_list_->list_.pop_back();
+      arguments_ = nullptr;
+    } else if (stmt == "ndarray_store") {
+      array_access_ = new ArrayAccess(constant_var_list_->list_.front(),
+                                      arguments_);
+      constant_var_list_->list_.pop_front();
       arguments_ = nullptr;
     }
   }
