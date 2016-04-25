@@ -491,22 +491,22 @@ struct SingleStatement : public Statement {
                   Arguments* arguments)
       : statement_header_(statement_header),
         constant_var_list_(constant_var_list),
-        arguments_(arguments),
-        array_access_(nullptr) {
+        arguments_(arguments) {
 
     std::string stmt = statement_header_->ToString();
 
-    if (stmt == "array_read" ||
-        stmt == "ndarray_read" ||
-        stmt == "member_read") {
-      array_access_ = new ArrayAccess(constant_var_list->list_.back(),
-                                      arguments);
+    ArrayAccess *ae = 0;
+    if (stmt == "@array_read" ||
+        stmt == "@ndarray_read" ||
+        stmt == "@member_read") {
+      ae = new ArrayAccess(constant_var_list->list_.back(), arguments_);
       constant_var_list_->list_.pop_back();
+      constant_var_list_->list_.push_back(ae);
       arguments_ = nullptr;
-    } else if (stmt == "ndarray_store") {
-      array_access_ = new ArrayAccess(constant_var_list_->list_.front(),
-                                      arguments_);
+    } else if (stmt == "@ndarray_store") {
+      ae = new ArrayAccess(constant_var_list_->list_.front(), arguments_);
       constant_var_list_->list_.pop_front();
+      constant_var_list_->list_.push_front(ae);
       arguments_ = nullptr;
     }
   }
@@ -515,8 +515,8 @@ struct SingleStatement : public Statement {
     std::string r = statement_header_->ToString();
     r += " ";
     r += constant_var_list_->ToString();
-    r += " ";
-    r += array_access_ ? array_access_->ToString() : arguments_->ToString();
+    if (arguments_)
+      r += " " + arguments_->ToString();
     return r;
   }
 
@@ -525,11 +525,6 @@ struct SingleStatement : public Statement {
   StatementHeader* statement_header_;
   ConstantVarList* constant_var_list_;
   Arguments* arguments_;
-
-  // If this statement is one of the cases listed in the constructor, then
-  // array_access_ is not nullptr and arguments_ is nullptr.  Otherwise,
-  // array_access_ is nullptr, and arguments_ may or may not be nullptr.
-  ArrayAccess* array_access_;
 };
 
 #endif

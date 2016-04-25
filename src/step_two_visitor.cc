@@ -51,19 +51,14 @@ void StepTwoVisitor::Visit(SingleStatement* single_statement) {
 
   // Replace all @symbol_table references with pointers to actual symbols.
   for (auto& i : nodes) {
-    auto* constant_var = dynamic_cast<ConstantVar*>(i);
-    assert(constant_var);
-    constant_var->node_ = Lookup(constant_var->node_);
-  }
-
-  // If there is ArrayAccess, also replace @symbol_table reference in it.
-  if (ArrayAccess* a = single_statement->array_access_) {
-    auto* constant_var = dynamic_cast<ConstantVar*>(a->constant_var_);
-    constant_var->node_ = Lookup(constant_var->node_);
-    // TODO: replace @symbol_table references in arguments_.
-    assert(a->arguments_);
-  } else {
-    // TODO: if arguments_ then replace @symbol_table references in arguments_.
+    if (auto* constant_var = dynamic_cast<ConstantVar*>(i))
+      constant_var->node_ = Lookup(constant_var->node_);
+    else if (ArrayAccess* ae = dynamic_cast<ArrayAccess*>(i)) {
+      auto* constant_var = dynamic_cast<ConstantVar*>(ae->constant_var_);
+      constant_var->node_ = Lookup(constant_var->node_);
+      // TODO: replace @symbol_table references in arguments_.
+      assert(ae->arguments_);
+    }
   }
 
   // The first address in all instructions is in the write set.
@@ -74,8 +69,10 @@ void StepTwoVisitor::Visit(SingleStatement* single_statement) {
   while (++it != nodes.end())
     single_statement->read_set_.insert(*it);
 
-  if (ArrayAccess* a = single_statement->array_access_)
-    single_statement->read_set_.insert(a);
-  else if (single_statement->arguments_)
+  // If the statement contains an array expression, it may absorb the arguments_
+  // into ArrayAccess object (see SingleStatement constructor in types.h) and
+  // set arguments_ to NULL, therefore, check if it is null before adding it to
+  // read set.
+  if (single_statement->arguments_)
     single_statement->read_set_.insert(single_statement->arguments_);
 }
