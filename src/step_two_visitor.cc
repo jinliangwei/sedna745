@@ -12,6 +12,7 @@ void StepTwoVisitor::Visit(Program* program) {
 
 void StepTwoVisitor::Visit(BlockScope* block_scope) {
   symbol_table_.AddScope();
+  block_scope->scope_level_ = symbol_table_.GetScopeLevel();
   for (auto i : block_scope->list_)
     i->Accept(this);
 }

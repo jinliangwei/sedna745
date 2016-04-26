@@ -14,7 +14,7 @@ class SymbolTable {
   void AddScope();
   void AddSymbol(Symbol *);
   Symbol* Lookup(std::string symbol);
-  
+  int GetScopeLevel() { return scopes_.size() - 1; }
  private:
   std::deque<ScopeMap> scopes_;
 };

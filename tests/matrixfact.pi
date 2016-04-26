@@ -80,15 +80,12 @@
 	type : float
       }
 
-      @load t0 @symbol_table["e"]
-      @member_read t1 t0 (idx)
+      @member_read t1 @symbol_table["e"] (idx)
       @array_read t2 t1 (1)
-      @load t3 @symbol_table["R"]
-      @ndarray_read t4 t3 (t2)
+      @ndarray_read t4 @symbol_table["R"] (t2)
       @call t5 t4 transpose ()
       @array_read t6 t1 (0)
-      @load t7 @symbol_table["L"]
-      @ndarray_read t8 t7 (t6)
+      @ndarray_read t8 @symbol_table["L"] (t6)
       @call t9 t8 dot_prod (t4)
       @store @symbol_table["pred"] t9
 

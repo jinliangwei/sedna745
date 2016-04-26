@@ -6,6 +6,8 @@
 
 using IterId = int64_t;
 using IterVec = std::vector<size_t>;
+using Edge = std::pair<IterId, IterId>;
+using EdgeSet = std::set<Edge>;
 
 class IterationSpace {
  private:
@@ -23,7 +25,20 @@ class IterationSpace {
   }
   ~ IterationSpace() { }
 
-  IterId GetIterationId(const IterVec &iter_vector) {
+  IterationSpace(const IterationSpace& other):
+      dims_(other.dims_),
+      strides_(other.strides_) { }
+
+  size_t
+  GetNumberIterations() const {
+    size_t num_iterations = 1;
+    for (int i = 0; i < dims_.size(); ++i) {
+      num_iterations *= dims_[i];
+    }
+    return num_iterations;
+  }
+
+  IterId GetIterationId(const IterVec &iter_vector) const {
     IterId id = 0;
     for (auto i = 0; i < dims_.size(); ++i) {
       id += iter_vector[i] * strides_[i];
@@ -31,7 +46,7 @@ class IterationSpace {
     return id;
   }
 
-  IterVec GetIterationVector(IterId iter_id) {
+  IterVec GetIterationVector(IterId iter_id) const {
     IterVec iter_vec(dims_.size());
     for (auto i = 0; i < dims_.size(); ++i) {
       iter_vec[i] = iter_id / strides_[i];
@@ -39,12 +54,42 @@ class IterationSpace {
     }
     return iter_vec;
   }
+
+  std::string
+  IterIdToString(IterId iter_id) const {
+    IterVec iter_vec = GetIterationVector(iter_id);
+    std::string s("(");
+    for (auto v : iter_vec) {
+      s += std::to_string(v);
+      s += ",";
+    }
+    s += ")";
+    return s;
+  }
 };
 
-
 class DependenceGraph {
-
+ private:
+  IterationSpace iteration_space_;
+  EdgeSet edge_set_;
  public:
-  std::string ToString() { return ""; }
+  DependenceGraph(const IterationSpace &iteration_space):
+      iteration_space_(iteration_space) { }
+  DependenceGraph(const DependenceGraph &dg):
+      iteration_space_(dg.iteration_space_),
+      edge_set_(dg.edge_set_) { }
+  void
+  AddEdge(IterId iter1, IterId iter2) {
+    edge_set_.emplace(iter1, iter2);
+  }
+
+  void
+  Print() {
+    for (auto edge : edge_set_) {
+      std::cout << iteration_space_.IterIdToString(edge.first)
+                << " -- " << iteration_space_.IterIdToString(edge.second)
+                << std::endl;
+    }
+  }
 
 };

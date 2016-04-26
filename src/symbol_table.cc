@@ -5,14 +5,12 @@ void SymbolTable::AddScope() {
 }
 
 void SymbolTable::AddSymbol(Symbol *symbol) {
-  std::string symbol_name;
-
-  for (const auto& kv : symbol->key_value_list_->map_)
-    if (kv.first->ToString() == "identifier")
-      symbol_name = kv.second->ToString();
+  std::string symbol_name = symbol->key_value_list_->Lookup("identifier")->ToString();
 
   // There must be an "identifier" within %symbol definition.
   assert(symbol_name != "");
+
+  symbol->scope_level_ = scopes_.size() - 1;
 
   auto t = scopes_.front().insert(std::make_pair(symbol_name, symbol));
 

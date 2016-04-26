@@ -262,9 +262,9 @@ struct KeyValue : public Node {
 struct KeyValueList : public Node {
   std::string ToString() {
     std::string r;
-    int i = map_.size();
-    for (const auto& kv : map_) {
-      r += KeyValue(kv.first, kv.second).ToString();
+    int i = list_.size();
+    for (auto j : list_) {
+      r += j->ToString();
       if (--i)
         r += ",";
       r += "\n";
@@ -273,19 +273,21 @@ struct KeyValueList : public Node {
   }
 
   void Insert(KeyValue *kv) {
-    assert(map_.find(kv->key_) == map_.end());
-    map_[kv->key_] = kv->value_;
+    assert(map_.find(kv->key_->value_) == map_.end());
+    map_[kv->key_->value_] = kv->value_;
+    list_.push_front(kv);
     delete kv;
   }
 
-  Value *Lookup(Identifier *key) {
+  Value *Lookup(const std::string &key) {
     auto it = map_.find(key);
     return it == map_.end() ? 0 : it->second;
   }
 
   void Accept(Visitor *v) { v->Visit(this); }
 
-  std::map<Identifier*, Value*> map_;
+  std::list<KeyValue*> list_;
+  std::map<std::string, Value*> map_;
 };
 
 struct Attributes : public Node {
@@ -330,6 +332,7 @@ struct Symbol : public Node {
   void Accept(Visitor *v) { v->Visit(this); }
 
   KeyValueList* key_value_list_;
+  int scope_level_ { 0 };
 };
 
 struct Program : public NodeList {
@@ -358,6 +361,7 @@ struct BlockScope : public NodeList {
   }
 
   void Accept(Visitor *v) { v->Visit(this); }
+  int scope_level_ {0};
 };
 
 struct Function : public Node {
@@ -509,8 +513,7 @@ struct SingleStatement : public Statement {
 
     ArrayAccess *ae = 0;
     if (stmt == "@array_read" ||
-        stmt == "@ndarray_read" ||
-        stmt == "@member_read") {
+        stmt == "@ndarray_read") {
       ae = new ArrayAccess(constant_var_list->list_.back(), arguments_);
       constant_var_list_->list_.pop_back();
       constant_var_list_->list_.push_back(ae);
