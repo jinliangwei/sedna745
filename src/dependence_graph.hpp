@@ -59,9 +59,11 @@ class IterationSpace {
   IterIdToString(IterId iter_id) const {
     IterVec iter_vec = GetIterationVector(iter_id);
     std::string s("(");
+    size_t i = 0;
     for (auto v : iter_vec) {
       s += std::to_string(v);
-      s += ",";
+      if (++i < iter_vec.size())
+        s += ",";
     }
     s += ")";
     return s;

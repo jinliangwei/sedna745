@@ -18,7 +18,7 @@ int main (int argc, char *argv[])
 
   DependenceAnalysis dependence_analysis(program);
   bool has_foreach_loop = dependence_analysis.Initialize();
-  IterVec dims {10, 10};
+  IterVec dims {4, 4};
   IterationSpace iteration_space(dims);
   if (has_foreach_loop) {
     DependenceGraph dg = dependence_analysis.ComputeDependenceGraph(iteration_space);
