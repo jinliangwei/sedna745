@@ -3,11 +3,18 @@
 #include <vector>
 #include <cstdint>
 #include <string>
+#include <map>
 
 using IterId = int64_t;
 using IterVec = std::vector<size_t>;
 using Edge = std::pair<IterId, IterId>;
 using EdgeSet = std::set<Edge>;
+using Vertex = IterId;
+using Neighbors = std::vector<Vertex>;
+using AdjacencyList = std::map<Vertex, Neighbors>;
+using VertexSet = std::set<Vertex>;
+using Color = int;
+using ColorSet = std::map<Color, VertexSet>;
 
 class IterationSpace {
  private:
@@ -74,6 +81,8 @@ class DependenceGraph {
  private:
   IterationSpace iteration_space_;
   EdgeSet edge_set_;
+  AdjacencyList adjacency_list_;
+  std::vector<int> colors_;
  public:
   DependenceGraph(const IterationSpace &iteration_space):
       iteration_space_(iteration_space) { }
@@ -81,8 +90,10 @@ class DependenceGraph {
       iteration_space_(dg.iteration_space_),
       edge_set_(dg.edge_set_) { }
   void
-  AddEdge(IterId iter1, IterId iter2) {
+  AddEdge(Vertex iter1, Vertex iter2) {
     edge_set_.emplace(iter1, iter2);
+    adjacency_list_[iter1].push_back(iter2);
+    adjacency_list_[iter2].push_back(iter1);
   }
 
   void
@@ -94,4 +105,34 @@ class DependenceGraph {
     }
   }
 
+  int MaxNeighborColor(Vertex v) {
+    int max_color = 0;
+    Neighbors& neighbors = adjacency_list_[v];
+
+    auto it = neighbors.begin();
+    if (it == neighbors.end())
+      return max_color;
+
+    for (max_color = colors_[*it]; it != neighbors.end(); ++it)
+      if (colors_[*it] > max_color)
+        max_color = colors_[*it];
+    return max_color;
+  }
+
+  void GreedyColor() {
+    int n = adjacency_list_.size();
+    colors_.resize(n, 0);
+    for (int i = 0; i < n; ++i)
+      colors_[i] = MaxNeighborColor(i) + 1;
+
+    ColorSet color_set;
+    for (int i = 0; i < n; ++i)
+      color_set[colors_[i]].insert(i);
+
+    for (const auto& cs : color_set) {
+      std::cout << "The following iterations can be executed in parallel\n";
+      for (const auto i : cs.second)
+        std::cout << iteration_space_.IterIdToString(i) << "\n";
+    }
+  }
 };

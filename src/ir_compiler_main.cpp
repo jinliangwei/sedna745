@@ -23,6 +23,8 @@ int main (int argc, char *argv[])
   if (has_foreach_loop) {
     DependenceGraph dg = dependence_analysis.ComputeDependenceGraph(iteration_space);
     dg.Print();
+    dg.GreedyColor();
   }
+
   return rc;
 }
