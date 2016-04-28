@@ -105,25 +105,25 @@ class DependenceGraph {
     }
   }
 
-  int MaxNeighborColor(Vertex v) {
-    int max_color = 0;
+  int MinColorNotUsedByNeighbors(Vertex v) {
     Neighbors& neighbors = adjacency_list_[v];
+    std::set<Color> neighbor_colors;
+    for (const auto& n : neighbors)
+      neighbor_colors.insert(colors_[n]);
 
-    auto it = neighbors.begin();
-    if (it == neighbors.end())
-      return max_color;
+    int min_color = 1;
+    while (neighbor_colors.find(min_color) != neighbor_colors.end())
+      ++min_color;
 
-    for (max_color = colors_[*it]; it != neighbors.end(); ++it)
-      if (colors_[*it] > max_color)
-        max_color = colors_[*it];
-    return max_color;
+    assert(min_color < colors_.size());
+    return min_color;
   }
 
   void GreedyColor() {
-    int n = adjacency_list_.size();
+    int n = iteration_space_.GetNumberIterations();
     colors_.resize(n, 0);
     for (int i = 0; i < n; ++i)
-      colors_[i] = MaxNeighborColor(i) + 1;
+      colors_[i] = MinColorNotUsedByNeighbors(i);
 
     ColorSet color_set;
     for (int i = 0; i < n; ++i)
